@@ -17,12 +17,27 @@ PROJECT_NAME="pegasus-ui"
 FRONTEND_PORT=3001
 API_PORT=3000
 
-# Determine which docker-compose file to use based on OS
+# Determine which docker-compose file to use based on OS and API availability
 get_compose_file() {
     if [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]]; then
         echo "docker-compose.dev.yml"
     else
-        echo "docker-compose.prod.yml"
+        # Check if API is already running on port 3000
+        if command -v ss &> /dev/null; then
+            if ss -tuln | grep ":3000 " > /dev/null; then
+                echo "docker-compose.frontend-only.yml"
+            else
+                echo "docker-compose.prod.yml"
+            fi
+        elif command -v lsof &> /dev/null; then
+            if lsof -i :3000 > /dev/null 2>&1; then
+                echo "docker-compose.frontend-only.yml"
+            else
+                echo "docker-compose.prod.yml"
+            fi
+        else
+            echo "docker-compose.prod.yml"
+        fi
     fi
 }
 
@@ -97,6 +112,16 @@ create_directories() {
 # Build and start services
 deploy_services() {
     print_status "Building and starting services..."
+    
+    # Inform user about the configuration being used
+    if [[ "$COMPOSE_FILE" == "docker-compose.frontend-only.yml" ]]; then
+        print_status "API detected on port 3000 - deploying frontend-only configuration"
+        print_status "Frontend will connect to existing API at localhost:3000"
+    elif [[ "$COMPOSE_FILE" == "docker-compose.prod.yml" ]]; then
+        print_status "No API detected - deploying full stack configuration"
+    else
+        print_status "Using development configuration for Windows"
+    fi
     
     # Stop any existing containers
     print_status "Stopping existing containers..."
