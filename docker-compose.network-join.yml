@@ -7,17 +7,22 @@ services:
       dockerfile: Dockerfile
       args:
         - NODE_ENV=production
-        - API_URL=http://localhost:3000
+        - API_URL=http://pegasus-nest-prod:3000
     image: pegasus-frontend:latest
     container_name: pegasus-frontend
     restart: unless-stopped
+    ports:
+      - "3001:3001"
     environment:
       - NODE_ENV=production
-      - API_URL=http://localhost:3000
+      - API_URL=http://pegasus-nest-prod:3000
       - PORT=3001
       - HOSTNAME=0.0.0.0
-    network_mode: "host"
     volumes:
       - ./logs:/app/logs:rw
 
-# Using host networking to directly access the API on localhost:3000
+# This configuration will be updated by the deployment script to use the API's network
+networks:
+  default:
+    external: true
+    name: pegasus_nest_default
