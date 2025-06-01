@@ -67,6 +67,15 @@ docker-compose -f docker-compose.prod.yml ps
 
 ## Configuration
 
+### Docker Build Issues on Windows
+
+If you encounter symlink permission errors during build on Windows, use the alternative Dockerfile:
+
+```bash
+# Use the development Dockerfile for Windows
+docker build -f Dockerfile.dev -t pegasus-frontend:latest .
+```
+
 ### Environment Variables
 
 Create `.env.production` file for production environment:

@@ -78,13 +78,21 @@ deploy_services() {
     print_status "Stopping existing containers..."
     docker-compose down 2>/dev/null || true
     
-    # Build the frontend image
-    print_status "Building frontend Docker image..."
-    docker-compose build frontend
-    
-    # Start all services
-    print_status "Starting all services..."
-    docker-compose up -d
+    # Detect platform and choose appropriate build strategy
+    if [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]]; then
+        print_warning "Windows detected - using alternative Dockerfile for development"
+        docker build -f Dockerfile.dev -t pegasus-frontend:latest .
+        docker-compose -f docker-compose.dev.yml up -d
+    else
+        print_status "Linux/Unix detected - using optimized production Dockerfile"
+        # Build the frontend image
+        print_status "Building frontend Docker image..."
+        docker-compose build frontend
+        
+        # Start all services
+        print_status "Starting all services..."
+        docker-compose up -d
+    fi
     
     print_status "Waiting for services to start..."
     sleep 10

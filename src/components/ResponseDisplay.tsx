@@ -110,7 +110,7 @@ const ResponseDisplay: React.FC<ResponseDisplayProps> = ({ response, type }) => 
                   </div>
                   <div>
                     <p className="font-black text-2xl text-slate-700 dark:text-slate-200 drop-shadow-sm">🤖 Generating plugin...</p>
-                    <p className="text-slate-600 dark:text-slate-400 font-semibold text-lg mt-2">This may take a few minutes. Please don't close this window.</p>
+                    <p className="text-slate-600 dark:text-slate-400 font-semibold text-lg mt-2">This may take a few minutes. Please don&apos;t close this window.</p>
                     <div className="mt-4 flex items-center gap-2">
                       <div className="w-2 h-2 bg-blue-500 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
                       <div className="w-2 h-2 bg-purple-500 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>

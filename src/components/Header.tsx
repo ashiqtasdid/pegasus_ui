@@ -7,15 +7,23 @@ interface HeaderProps {
   onToggleDarkMode: () => void
   connectionStatus?: 'checking' | 'connected' | 'disconnected' | 'error'
   connectionMessage?: string
-  backendInfo?: any
+  backendInfo?: {
+    status?: string;
+    message?: string;
+    uptime?: number;
+    version?: string;
+    environment?: string;
+    memory?: { heapUsed?: string };
+    system?: { platform?: string; arch?: string };
+    timestamp?: string;
+  } | null
 }
 
 const Header: React.FC<HeaderProps> = ({ 
   isDarkMode, 
   onToggleDarkMode, 
   connectionStatus = 'checking',
-  connectionMessage = '',
-  backendInfo 
+  connectionMessage = ''
 }) => {
   return (
     <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-16 gap-8">

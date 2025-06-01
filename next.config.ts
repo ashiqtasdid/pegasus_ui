@@ -1,7 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  output: 'standalone',
+  // Note: standalone mode disabled on Windows due to symlink permission issues
+  // It will be enabled during Docker build on Linux
+  output: process.env.DOCKER_BUILD === 'true' ? 'standalone' : undefined,
   async rewrites() {
     return [
       {

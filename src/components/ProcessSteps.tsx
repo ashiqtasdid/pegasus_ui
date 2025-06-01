@@ -139,11 +139,9 @@ const ProcessSteps: React.FC<ProcessStepsProps> = ({
           <div className="p-10">
             <div className="space-y-8">
               {steps.map((step, index) => {
-                const stepNumber = index + 1;
-                const isCompleted = currentStep > stepNumber || isComplete;
+                const stepNumber = index + 1;                const isCompleted = currentStep > stepNumber || isComplete;
                 const isCurrent =
                   currentStep === stepNumber && !isComplete && !isError;
-                const isPending = currentStep < stepNumber && !isComplete;
                 const hasError = isError && currentStep === stepNumber;
 
                 return (

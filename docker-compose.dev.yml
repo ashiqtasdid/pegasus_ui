@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  # API Service (you'll need to replace this with your actual API configuration)
+  api:
+    image: pegasus-api:latest  # Replace with your actual API image name
+    container_name: pegasus-api
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+    networks:
+      - pegasus-network
+    # Add your API-specific volumes and environment files
+    # volumes:
+    #   - ./api-data:/app/data
+    # env_file:
+    #   - .env.api
+
+  # Next.js Frontend Service
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile  # Will automatically use standalone mode on Linux
+    container_name: pegasus-frontend
+    restart: unless-stopped
+    ports:
+      - "3001:3001"
+    environment:
+      - NODE_ENV=production
+      - API_URL=http://api:3000
+      - PORT=3001
+    depends_on:
+      - api
+    networks:
+      - pegasus-network
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3001/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+networks:
+  pegasus-network:
+    driver: bridge
+
+# Optional: Add named volumes for persistent data
+volumes:
+  api_data:
+    driver: local

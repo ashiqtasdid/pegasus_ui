@@ -40,11 +40,19 @@ const Home = () => {
   const [isError, setIsError] = useState(false)
   const [isComplete, setIsComplete] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
-
   // Connection status state variables
   const [connectionStatus, setConnectionStatus] = useState<'checking' | 'connected' | 'disconnected' | 'error'>('checking')
   const [connectionMessage, setConnectionMessage] = useState('')
-  const [backendInfo, setBackendInfo] = useState<any>(null)
+  const [backendInfo, setBackendInfo] = useState<{
+    status?: string;
+    message?: string;
+    uptime?: number;
+    version?: string;
+    environment?: string;
+    memory?: { heapUsed?: string };
+    system?: { platform?: string; arch?: string };
+    timestamp?: string;
+  } | null>(null)
 
   // Initialize dark mode and test backend connection
   useEffect(() => {
@@ -97,14 +105,12 @@ const Home = () => {
         signal: AbortSignal.timeout(5000)
       }).catch(() => null)
       
-      if (response && response.ok) {
-        try {
+      if (response && response.ok) {        try {
           const healthData = await response.json()
           setConnectionStatus('connected')
           setConnectionMessage('Backend connected and healthy')
           setBackendInfo(healthData)
-          return
-        } catch (parseError) {
+          return        } catch {
           setConnectionStatus('connected')
           setConnectionMessage('Backend connected (response format unexpected)')
           return
@@ -112,7 +118,7 @@ const Home = () => {
       }
       
       // Fallback methods if health endpoint fails
-      let fallbackResponse = await fetch('/create', { 
+      const fallbackResponse = await fetch('/create', { 
         method: 'OPTIONS',
         signal: AbortSignal.timeout(5000)
       }).catch(() => null)
@@ -160,17 +166,17 @@ const Home = () => {
 🖥️ Platform: ${healthData.system?.platform || 'unknown'} (${healthData.system?.arch || 'unknown'})
 📅 Timestamp: ${healthData.timestamp ? new Date(healthData.timestamp).toLocaleString() : 'unknown'}`
           
-          alert(statusMessage)
-          return
+          alert(statusMessage);
+          return;
           
-        } catch (parseError) {
+        } catch {
           alert('✅ Backend server is healthy, but response format is unexpected.')
           return
         }
       }
       
       // Fallback methods if health endpoint fails
-      let fallbackResponse = await fetch('/create', { 
+      const fallbackResponse = await fetch('/create', { 
         method: 'OPTIONS',
         signal: AbortSignal.timeout(5000)
       }).catch(() => null)
@@ -186,41 +192,7 @@ const Home = () => {
     } catch (error) {
       const errorMsg = error instanceof Error ? error.message : 'Unknown error'
       alert(`❌ Connection test failed: ${errorMsg}`)
-    }
-  }
-
-  // Check if backend is available before plugin generation (lightweight check)
-  const checkBackendAvailability = async (): Promise<boolean> => {
-    try {
-      // First try the health endpoint (most reliable)
-      let response = await fetch('/health/detailed', { 
-        method: 'GET',
-        signal: AbortSignal.timeout(3000)
-      }).catch(() => null)
-      
-      if (response && response.ok) return true
-      
-      // Fallback to OPTIONS request (CORS preflight, very lightweight)
-      response = await fetch('/create', { 
-        method: 'OPTIONS',
-        signal: AbortSignal.timeout(3000)
-      }).catch(() => null)
-      
-      if (response && (response.ok || response.status === 405 || response.status === 404)) return true
-      
-      // Try HEAD request (no body processing)
-      response = await fetch('/create', { 
-        method: 'HEAD',
-        signal: AbortSignal.timeout(3000)
-      }).catch(() => null)
-      
-      if (response && (response.ok || response.status === 405 || response.status === 404)) return true
-      
-      return false
-    } catch {
-      return false
-    }
-  }
+    }  }
 
   // Reset form
   const resetForm = () => {
@@ -300,14 +272,13 @@ const Home = () => {
         } else if (response.status === 500) {
           errorMsg = 'Internal server error occurred. Please try again.'
         }
-        
-        // Try to get more specific error message
+          // Try to get more specific error message
         try {
           const errorData = await response.text()
           if (errorData && !errorData.includes('<!DOCTYPE html>')) {
             errorMsg = errorData.includes('Error:') ? errorData : `${errorMsg}: ${errorData}`
           }
-        } catch (parseError) {
+        } catch {
           // If we can't parse the error, keep the generic message
         }
         
