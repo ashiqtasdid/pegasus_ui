@@ -118,7 +118,7 @@ const Home = () => {
       }
       
       // Fallback methods if health endpoint fails
-      const fallbackResponse = await fetch('/create', { 
+      const fallbackResponse = await fetch('/api/create', { 
         method: 'OPTIONS',
         signal: AbortSignal.timeout(5000)
       }).catch(() => null)
@@ -168,15 +168,14 @@ const Home = () => {
           
           alert(statusMessage);
           return;
-          
-        } catch {
+            } catch {
           alert('✅ Backend server is healthy, but response format is unexpected.')
           return
         }
       }
       
       // Fallback methods if health endpoint fails
-      const fallbackResponse = await fetch('/create', { 
+      const fallbackResponse = await fetch('/api/create', { 
         method: 'OPTIONS',
         signal: AbortSignal.timeout(5000)
       }).catch(() => null)
@@ -247,9 +246,8 @@ const Home = () => {
     setResponseType('loading')
     setGenerateResponse('Generating plugin... This process takes 5-10 minutes. Please be patient and don\'t close this window.')
 
-    try {
-      setTimeout(() => updateProcessStep(2), 2000)
-        const response = await fetch('/create', {
+    try {      setTimeout(() => updateProcessStep(2), 2000)
+        const response = await fetch('/api/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -532,8 +530,7 @@ const Home = () => {
     setChatInput('')
     setIsChatLoading(true)
     
-    try {
-      const response = await fetch('/create/chat', {
+    try {      const response = await fetch('/api/create/chat', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
