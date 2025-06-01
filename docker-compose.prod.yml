@@ -25,7 +25,6 @@ services:
     #   - ./api-logs:/app/logs
     # env_file:
     #   - .env.api
-
   # Next.js Frontend Service
   frontend:
     build:
@@ -33,6 +32,7 @@ services:
       dockerfile: Dockerfile
       args:
         - NODE_ENV=production
+        - API_URL=http://api:3000
     image: pegasus-frontend:latest
     container_name: pegasus-frontend
     restart: unless-stopped

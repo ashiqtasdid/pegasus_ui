@@ -17,6 +17,17 @@ PROJECT_NAME="pegasus-ui"
 FRONTEND_PORT=3001
 API_PORT=3000
 
+# Determine which docker-compose file to use based on OS
+get_compose_file() {
+    if [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]]; then
+        echo "docker-compose.dev.yml"
+    else
+        echo "docker-compose.prod.yml"
+    fi
+}
+
+COMPOSE_FILE=$(get_compose_file)
+
 echo -e "${BLUE}======================================${NC}"
 echo -e "${BLUE}  Pegasus UI Deployment Script${NC}"
 echo -e "${BLUE}======================================${NC}"
@@ -54,12 +65,25 @@ check_docker() {
 check_ports() {
     print_status "Checking if ports $FRONTEND_PORT and $API_PORT are available..."
     
-    if netstat -tuln | grep ":$FRONTEND_PORT " > /dev/null; then
-        print_warning "Port $FRONTEND_PORT is already in use. Continuing anyway..."
-    fi
-    
-    if netstat -tuln | grep ":$API_PORT " > /dev/null; then
-        print_warning "Port $API_PORT is already in use. Continuing anyway..."
+    # Use ss command (more modern and widely available) or lsof as fallback
+    if command -v ss &> /dev/null; then
+        if ss -tuln | grep ":$FRONTEND_PORT " > /dev/null; then
+            print_warning "Port $FRONTEND_PORT is already in use. Continuing anyway..."
+        fi
+        
+        if ss -tuln | grep ":$API_PORT " > /dev/null; then
+            print_warning "Port $API_PORT is already in use. Continuing anyway..."
+        fi
+    elif command -v lsof &> /dev/null; then
+        if lsof -i :$FRONTEND_PORT > /dev/null 2>&1; then
+            print_warning "Port $FRONTEND_PORT is already in use. Continuing anyway..."
+        fi
+        
+        if lsof -i :$API_PORT > /dev/null 2>&1; then
+            print_warning "Port $API_PORT is already in use. Continuing anyway..."
+        fi
+    else
+        print_warning "Cannot check port availability (ss/lsof/netstat not found). Continuing anyway..."
     fi
 }
 
@@ -76,22 +100,22 @@ deploy_services() {
     
     # Stop any existing containers
     print_status "Stopping existing containers..."
-    docker-compose down 2>/dev/null || true
+    docker-compose -f $COMPOSE_FILE down 2>/dev/null || true
     
     # Detect platform and choose appropriate build strategy
     if [[ "$OSTYPE" == "msys" ]] || [[ "$OSTYPE" == "win32" ]]; then
         print_warning "Windows detected - using alternative Dockerfile for development"
         docker build -f Dockerfile.dev -t pegasus-frontend:latest .
-        docker-compose -f docker-compose.dev.yml up -d
+        docker-compose -f $COMPOSE_FILE up -d
     else
         print_status "Linux/Unix detected - using optimized production Dockerfile"
-        # Build the frontend image
+        # Build the frontend image with build args
         print_status "Building frontend Docker image..."
-        docker-compose build frontend
+        docker-compose -f $COMPOSE_FILE build frontend
         
         # Start all services
         print_status "Starting all services..."
-        docker-compose up -d
+        docker-compose -f $COMPOSE_FILE up -d
     fi
     
     print_status "Waiting for services to start..."
@@ -120,16 +144,16 @@ check_health() {
 # Show service status
 show_status() {
     print_status "Docker container status:"
-    docker-compose ps
+    docker-compose -f $COMPOSE_FILE ps
     
     echo ""
     print_status "Service logs (last 20 lines):"
     echo -e "${YELLOW}Frontend logs:${NC}"
-    docker-compose logs --tail=20 frontend
+    docker-compose -f $COMPOSE_FILE logs --tail=20 frontend
     
     echo ""
     echo -e "${YELLOW}API logs:${NC}"
-    docker-compose logs --tail=20 api 2>/dev/null || print_warning "API container not found or not running"
+    docker-compose -f $COMPOSE_FILE logs --tail=20 api 2>/dev/null || print_warning "API container not found or not running"
 }
 
 # Cleanup function
@@ -157,10 +181,10 @@ main() {
     echo -e "${GREEN}API URL: http://localhost:$API_PORT${NC}"
     echo ""
     echo -e "${BLUE}Useful commands:${NC}"
-    echo -e "  View logs: ${YELLOW}docker-compose logs -f${NC}"
-    echo -e "  Stop services: ${YELLOW}docker-compose down${NC}"
-    echo -e "  Restart services: ${YELLOW}docker-compose restart${NC}"
-    echo -e "  View status: ${YELLOW}docker-compose ps${NC}"
+    echo -e "  View logs: ${YELLOW}docker-compose -f $COMPOSE_FILE logs -f${NC}"
+    echo -e "  Stop services: ${YELLOW}docker-compose -f $COMPOSE_FILE down${NC}"
+    echo -e "  Restart services: ${YELLOW}docker-compose -f $COMPOSE_FILE restart${NC}"
+    echo -e "  View status: ${YELLOW}docker-compose -f $COMPOSE_FILE ps${NC}"
     echo ""
     
     # Optional cleanup

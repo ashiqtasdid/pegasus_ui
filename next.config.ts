@@ -5,22 +5,23 @@ const nextConfig: NextConfig = {
   // It will be enabled during Docker build on Linux
   output: process.env.DOCKER_BUILD === 'true' ? 'standalone' : undefined,
   async rewrites() {
+    const apiUrl = process.env.API_URL || 'http://localhost:3000';
     return [
       {
         source: '/api/create/:path*',
-        destination: process.env.API_URL + '/create/:path*',
+        destination: `${apiUrl}/create/:path*`,
       },
       {
         source: '/api/health/:path*',
-        destination: process.env.API_URL + '/health/:path*',
+        destination: `${apiUrl}/health/:path*`,
       },
       {
         source: '/api/optimization-stats/:path*',
-        destination: process.env.API_URL + '/optimization-stats/:path*',
+        destination: `${apiUrl}/optimization-stats/:path*`,
       },
       {
         source: '/api/clear-cache/:path*',
-        destination: process.env.API_URL + '/clear-cache/:path*',
+        destination: `${apiUrl}/clear-cache/:path*`,
       },
     ];
   },

@@ -21,8 +21,12 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# Set environment variable to enable standalone output
+# Accept build arguments
+ARG API_URL=http://localhost:3000
+
+# Set environment variables for build
 ENV DOCKER_BUILD=true
+ENV API_URL=${API_URL}
 
 # Build the application
 RUN \
