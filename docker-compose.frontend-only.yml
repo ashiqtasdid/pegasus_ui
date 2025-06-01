@@ -1,7 +1,8 @@
 version: '3.8'
 
 services:
-  # Next.js Frontend Service - connects to existing API on host  frontend:
+  # Next.js Frontend Service - connects to existing API on host
+  frontend:
     build:
       context: .
       dockerfile: Dockerfile
